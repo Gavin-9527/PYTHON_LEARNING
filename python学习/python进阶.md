@@ -215,12 +215,63 @@ q() #调用 跟上面结果一样
 		
 	在不修改源代码并且不改变调用方式的基础上，为一个函数拓展新功能的工具。
 
+	-装饰器简单实现
+```python
+'''
+给index功能新增一个计时功能
+'''
+import time
 
+def timmer(func):
 
+    # func
 
+    def warpper(*args,**kwargs):
 
+        start=time.time()
 
+        res = func(*args,**kwargs)  #func=index  
 
+        stop=time.time()
+
+        print(stop-start)
+
+        return res  #和func返回值保持一致
+
+    return warpper
+
+# （注意装饰器要先定义）在被装饰对象正上方单独写一行@装饰器名字 等价于 偷梁换柱
+
+@timmer #index=timmer(index)
+
+def index(x,y):
+
+    time.sleep(3)
+
+    print("index %s %s " %(x,y))
+
+# 偷梁换柱
+#index=timmer(index)
+
+index(1,2)
+```
+
+	总结无参装饰器模板
+```python
+def outter(func):
+	def wrapper(*args,**kwargs):
+		# 1、调用原函数
+		# 2、为其增加新功能
+		res=func(*args,**kwargs)
+		return res
+	
+	return wrapper
+
+@outter
+def index():
+	print('from index')
+```
+	
 
 
 
