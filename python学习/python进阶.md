@@ -220,12 +220,13 @@ q() #调用 跟上面结果一样
 '''
 给index功能新增一个计时功能
 '''
+from functools import wraps
 import time
 
 def timmer(func):
 
     # func
-
+	@wraps(func)
     def warpper(*args,**kwargs):
 
         start=time.time()
@@ -243,7 +244,6 @@ def timmer(func):
 # （注意装饰器要先定义）在被装饰对象正上方单独写一行@装饰器名字 等价于 偷梁换柱
 
 @timmer #index=timmer(index)
-
 def index(x,y):
 
     time.sleep(3)
@@ -256,22 +256,114 @@ def index(x,y):
 index(1,2)
 ```
 
+	
 	总结无参装饰器模板
 ```python
+from functools import wraps
+
+# 由于语法糖@的限制，outter函数只能有一个参数，并且该参数用来接收被装饰对象的内存地址 
 def outter(func):
+	# 将原函数的属性赋值给wrapper函数
+	@wraps(func)
 	def wrapper(*args,**kwargs):
 		# 1、调用原函数
 		# 2、为其增加新功能
-		res=func(*args,**kwargs)
+		res=func(*args,**kwargs) 
 		return res
-	
+	# 赋值属性手动本来在这
 	return wrapper
 
-@outter
+@outter  # 等价于 index = outter(index)
 def index():
 	print('from index')
 ```
 	
 
 
+	有参装饰器
+```python
+def 有参装饰器(db_type):
+	def outter(func):
+		# 将原函数的属性赋值给wrapper函数
+		@wraps(func)
+		def wrapper(*args,**kwargs):
+			if db_type='file':
+				# 1、调用原函数
+				# 2、为其增加新功能
+				res=func(*args,**kwargs) 
+				return res
+			else:
+				pass
+		# 赋值属性手动本来在这
+		return wrapper
+	return outter
+	
+@有参装饰器(db_type='file') #先成@outter  即变成上述无参装饰器
+def index():
+	print('from index')
+```
 
+
+
+## 迭代器
+	即迭代取值的工具，迭代是一个重复的过程，每次重复的过程都是基于上一次的结果而继续的，单纯的重复并不是迭代（如while true不是迭代）
+	迭代器可以不依赖索引迭代取值
+
+```
+可迭代对象：但凡内置有__iter__方法的都称之为可迭代的对象
+调用可迭代对象下的__iter__方法会将其转换成迭代器对象
+调用__next__方法就是取迭代器下一个值，超出范围则抛出异常  
+在同一个迭代器取值完后，再取值会取不到
+```
+	可迭代对象（可以转换为迭代器的对象）：内置有__iter__方法
+						可迭代对象.__iter__()得到迭代器对象
+						
+	迭代器对象：内置有__next__方法并且内置有__iter__方法
+						迭代器对象.__next__()方法得到迭代器的下一个值
+						迭代器对象.__iter__()方法得到迭代器本身（即调没调一样）,这是为了for循环统一
+
+
+``打开的文件是迭代器对象``
+
+
+
+### for 循环工作原理 for循环可以称为迭代器循环
+```python
+l = [1,2,3,4,5]
+#1、l.__iter__()得到一个迭代器对象
+#2、迭代器对象.__next__()拿到一个返回值，然后将该返回值赋值给k
+#3、循环反复步骤2，直到抛出异常StopIteration异常for循环会捕捉异常然后结束循环
+for k in l:
+	print(k)
+
+
+#换成while循环理解
+l.iterator = l.__iter__()  #=》iter(l)
+while True:
+	try:
+		print(l.iterator.__next__())  #=>next(l.iterator)
+	except StopIteration:
+		break
+```
+
+
+### 自定义迭代器（生成器）
+	生成器就是迭代器
+```python
+
+def func():
+	print('第一次')
+	yield 1
+	print('第二次')
+	yield 2
+	print('第三次')
+	yield 3
+	print('第四次')
+g = func()
+
+# 会触发函数体代码的运行，然后遇到yield 停下来，将yield后的值当作本次调用的结果返回
+# g.__next__()  #得到 第一次
+res = g.__next__()
+print(res) #第一次 
+		   #1
+```
