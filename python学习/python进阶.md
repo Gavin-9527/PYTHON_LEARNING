@@ -1,3 +1,4 @@
+## 文件
 #### with open（）
 	控制文件读写内容的模式：t，b
 		强调：t和b不能单独使用，必须跟r/w/a连用
@@ -113,7 +114,7 @@ def func(x,y=111,*args,z,**kwargs)
 ``局部->全局->内置
 ``函数内名字的查找是以定义阶段为准
 
-
+#### 测试案例
 ```python
 input = 333
 def func():
@@ -201,7 +202,7 @@ q() #调用 跟上面结果一样
 
 
 
-### 装饰器
+### 装饰器（多个装饰器加载顺序自下而上，执行顺序自上而下  ）
 #### 什么是装饰器
 	“装饰”指的是为其他事物添加额外的东西点缀，
 	“器”指工具，可以定义成函数。
@@ -367,3 +368,107 @@ res = g.__next__()
 print(res) #第一次 
 		   #1
 ```
+
+	生成器.send(值)  : 可以赋值
+	g.close()  关闭之后无法传值
+
+
+
+### 三元表达式
+```python
+def func():
+	if x>y:
+		return x
+	else:
+		return y 
+
+# 三元表达式
+res = x if x > y else y
+```
+
+
+### 列表生成式（[]改成（）就是生成器表达式，可防止内存爆炸）
+```python
+l = ['tony_dsb','jany_dsb','jack']
+new_l=[]
+for name in l:
+	if name.endswith('dsb'):
+		new_l.append(name)
+
+# 等价于
+new_l=[name for name in l if name.endswith('dsb')]
+```
+
+
+### 函数的递归调用：函数嵌套调用的一种特殊形式
+	本质就是循环
+	默认限制一千层
+
+
+	递推：一层层调用下去
+	回溯：满足某种结束条件，结束递归调用，然后一层一层返回
+
+
+
+## 匿名函数
+```python
+# def定义有名函数
+def func(x,y):
+	return x+y
+
+# lambda定义匿名函数
+lambda x,y:x+y
+# 调用匿名函数
+# 方式一:
+res=(lambda x,y:x+y)(1,2)
+
+# 方式二:
+func=lambda x,y:x+y
+func(1,2)
+
+# 以上都不是匿名，匿名函数定义时由于没绑定内存地址，所以都是临时用一次，然后回收，更多是将匿名函数与其他函数配合使用
+
+
+```
+
+### map
+```python
+l=['tom','jack','jerry']
+new_l(name+'_dsb' for name in l)
+# 等价于
+# map(函数,可迭代对象)
+map(lambda name:name+'_dsb',l) #得到生成器
+```
+
+
+### filter(过滤)
+```python
+l=['tom_dsb','jack_dsb','jerry']
+res=(name for name in l if name.endswith('dsb'))
+# 等价于
+# filter(函数,可迭代对象)
+filter(lambda name:name.endwith('dsb'),l)  #得到生成器
+
+```
+
+
+### reduce(了解，python3 不是内置函数了)
+```python
+from functools import reduce
+reduce(lambda x,y:x+y,[1,2,3],10)
+```
+
+
+## 模块
+#### 首次导入模块（如foo）会发生（无先后顺序）
+	执行该文件foo.py
+	产生文件foo.py的名称空间，会将foo.py运行过程中产生的名字放在名称空间里
+	在当前文件里产生的有一个名字foo，该名字指向2中产生的名称空间
+	之后再导入，都是直接引用首次产生的foo.py的名称空间，不会重复执行代码
+
+	变量foo.x与当前文件中变量x不冲突
+
+
+	无论是查看还是修改都是以原模块为基准的，以调用位置无关(foo.x如果不修改则不会变动)
+
+
