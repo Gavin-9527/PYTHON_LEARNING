@@ -40,6 +40,9 @@
 
 	空函数：函数体为pass
 
+	规范形参，形参后面加数据类型 如：name:str,age:int=18    表示age默认18
+	def func()->int:  指返回的是整型类型
+
 #### 函数的调用
 	函数调用可以当作参数
 
@@ -459,11 +462,12 @@ reduce(lambda x,y:x+y,[1,2,3],10)
 ```
 
 
-## 模块
+## 模块（包的本质是模块的一种形式，导包运行__init__.py文件）
 #### 首次导入模块（如foo）会发生（无先后顺序）
 	执行该文件foo.py
 	产生文件foo.py的名称空间，会将foo.py运行过程中产生的名字放在名称空间里
 	在当前文件里产生的有一个名字foo，该名字指向2中产生的名称空间
+	(若是from …… import ……,则会在该全局名称空间产生导入的变量名)
 	之后再导入，都是直接引用首次产生的foo.py的名称空间，不会重复执行代码
 
 	变量foo.x与当前文件中变量x不冲突
@@ -472,3 +476,435 @@ reduce(lambda x,y:x+y,[1,2,3],10)
 	无论是查看还是修改都是以原模块为基准的，以调用位置无关(foo.x如果不修改则不会变动)
 
 
+```
+当foo.py被运行时，__name__的值为"__main__"
+当foo.py被当作模块导入时，__name__的值为"foo"
+所以
+if __name__=='__main__':
+```
+
+### 软件开发规范
+	ATM
+		bin(启动文件)(或run.py)
+			start.py
+		conf(配置文件)
+			settings.py  
+		db
+			db_handle.py
+		lib(常用的自定义模块)
+			common.py
+		core(核心代码的逻辑)
+			src.py
+		setup.py(安装、部署、打包的脚本)
+		requirements.txt(存放软件以来的外部Python包列表)
+		README(项目说明文件)
+
+- 相对导入仅限于包内使用
+- 软件开发时，从别的文件夹导模块时，可以先`sys.path.append(r'路径')`将顶级目录路径加入python执行搜索路径中再导入别的文件夹的模块
+- 直接加路径会写死
+- \_\_file\_\_  会得到当前文件的绝对路径
+- 所以在执行文件（bin下start.py）里
+```python
+import os
+BASE_DIR=os.path.dirname(os.path.dirname(__file__))
+
+# 上述python2，3都能用
+
+# 下面最低python3.5
+from pathlib import Path
+root=Path(__file__)
+BASE_DIR=root.parent.parent
+
+
+import sys
+sys.path.append(BASE_DIR)
+```
+
+```
+在（非bin）其他文件夹导入其他文件夹：
+路径放入settings里,路径导入也如上
+```
+
+
+
+## 常用模块
+
+### time
+	时间分为三种模式：
+	1、时间戳：从1970年到现在经过的秒数
+		time.time()
+		作用：用于时间间隔的计算
+
+	2、按照某种格式显示的时间：
+		time.strftime('%Y-%m-%d %H:%M:%S %p')
+									2022-07-29 16:39:01 PM
+		作用：用于展示时间
+
+	3、结构化时间
+		time.localtime()  # 可以获取年份，月份等
+		作用：用于单独获取时间的某一部分
+
+
+### datetime
+	datetime.now() # 类似与上述2的显示时间
+	datetime.timedelta(days=3) #与now()+结合就是三天后的时间
+
+
+### time和datetime使用掌握的操作
+	时间格式的转换
+```python
+#时间戳转结构化
+import time
+tm=time.time()
+time.localtime(tm)
+# 或datetime.datetime.fromtimestamp(tm)
+
+#结构化转格式化
+tm=time.localtime()
+time.strftime('%Y-%m-%d %H:%M:%S',tm)
+
+#格式化转结构化
+time.striptime('2022-07-29 16:39:01','%Y-%m-%d %H:%M:%S')
+
+#真正需要掌握的
+#格式化和时间戳
+struct_time=time.strptime('2022-07-29 16:39:01','%Y-%m-%d %H:%M:%S') #先转结构化
+timestamp=time.mktime(struct_time) #结构化转时间戳
+timestamp+=7*86400 #加7天
+time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(timestamp)) #时间戳转会格式化
+```
+
+
+
+### random
+	random.random() # (0,1)
+	random.randint(1,3)  # [1,3]
+	random.randrange(1,3) # [1,3)
+	random.choise([1,'23',[4,5]]) # 1或者23或者[4,5]
+	random.sample([1,'23',[4,5]],i) # 列表元素任意取i个值
+	random.uniform(1,3) # 大于1小于3的小数
+	random.shuffle(item) # 洗乱item的顺序，相当于洗牌
+
+
+### os
+	os.path.getsize() 获取文件大小
+	os.remove() 删除文件
+	os.rename() 重命名文件
+	os.system() 运行shell命令
+	os.environ['']=''
+	os.path.dirname()  路径
+	os.path.basename()   文件名
+	os.path.isfile   是否是文件
+	os.path.isdir    是否是文件夹
+
+
+
+### 打印进度条
+```python
+'[%-50s]'    # 为%s传值，-左对齐，50固定宽度
+
+import time
+
+  
+recv_size=0
+
+total_size=33333
+
+while recv_size < total_size:
+
+    time.sleep(0.2)
+
+    recv_size += 1024
+
+    # 打印进度条
+
+    percent=recv_size / total_size
+
+    if percent > 1:
+
+        percent = 1  
+
+    res=int(50*percent) * '#'
+
+    for i in range(50):
+
+        print('\r[%-50s] %d%%' % (res,int(100*percent)),end='')   # \r表示不换行,在行首开始
+
+                #%s是传参，-是左对齐，50是固定宽度
+```
+
+
+
+### json&pickle
+	序列化
+		内存中的数据类型-->序列化-->特定的格式（json或pickle）
+	反序列化
+		内存中的数据类型<--序列化<--特定的格式（json或pickle）
+
+	用于存档：可是一种专用的格式=》pickle只有python可以识别
+	跨平台数据交互：应该是一种通用，能够被所有语言识别的格式=》json
+
+```python
+import json
+res=json.dumps(需要序列化的数据) # 序列化
+l=json.loads(res) # 反序列化
+with open('test.json',mode='wt',encoding='utf-8') as f:
+	f.write(res)
+# 将序列化结果写入文件的简单写法
+with open('test.json',mode='wt',encoding='utf-8') as f:
+	json.dump(需要序列化的数据,f)
+with open('test.json',mode='rt',encoding='utf-8') as f2:
+	json_res=f.read()
+	l=json.loads(json_res)
+	# l=json.load(f)
+```
+
+	json格式兼容的是所有语言都通用的数据类型，不能识别某一语言所特有的数据类型，如python的集合。
+
+```python
+import pickle
+res=pickle.dumps(需要序列化的数据) # 序列化成二进制
+l=pickle.loads(res) # 反序列化
+```
+
+
+### 猴子补丁
+	在入口文件可以进行猴子补丁
+```python
+import json
+import ujson
+def monkey_patch_json():
+	json.__name__ = 'ujson'
+	json.dumps = ujson.dumps
+	json.loads = ujson.loads
+monkey_patch_json()
+```
+
+
+### configparser
+	加载某种特定格式的配置文件(ini,cfg)
+```python
+config=configparser.ConfigParser()
+config.read('aaa.ini')
+# 获取sections
+config.sections()
+# 获取sections下的options
+config.options('某个section')
+# 获取items
+config.items('某个section')
+# 获取item
+config.get('某个section','某个item')
+# 还有getint,getboolean,getfloat
+```
+
+
+### 哈希
+	hash是一类算法，该算法接收传入的内容，经过运算得到一串hash值
+	hash值的特点
+		1、只要传入的值一样，hash值就是一样
+		2、只要使用的hash算法不变，传入的内容无论多大，hash值长度都不变
+		3、不能由hash值反解成内容（但是如果撞库就不一定了）
+
+```python
+# 用途一：特点三可以用于密文的传输和验证
+import hashlib
+m=hashlib.md5()
+m.update('hello',encode('utf-8'))
+m.update('world',encode('utf-8'))
+res=m.hexdigest() # 'helloworld'
+f=open('a.txt',mode='rb')
+f.seek(某个位置 )
+f.read(2000)  # 文件太大可以只检验部分
+m.update()
+# 用途二：特点一二可以用于文件完整性校验
+```
+
+
+## 日志
+```python
+import logging
+
+logging.basicConfig(
+
+                      format='%(asctime)s - %(name)s - %(levelname)s - %(module)s: %(message)s',
+
+                       datefmt='%Y-%m-%d %H:%M:%S %p',
+
+                       #不指定，默认打到终端
+
+                       filename='mymmmmmmmm.log',
+
+                       #既想终端，又想输出到文件
+
+                       level=10, #日志级别
+
+                       )
+
+  
+  
+
+logging.debug('调试debug') #10
+
+logging.info('消息info')   #20
+
+logging.warning('警告warn')#30
+
+logging.error('错误error') #40
+
+logging.critical('严重critical')#50
+```
+### 日志中用到的格式化串如下
+	%(name)s   Logger的名字
+	%(levelno)s   数字形式的日志级别
+	%(levelname)s  文本形式的日志级别
+	%(pathname)s  调用日志输出函数的模块的完整路径名，可能没有
+	%(filename)s  调用日志输出函数的模块的文件名
+	%(module)s   调用日志输出函数的模块名
+	%(funcName)s  调用日志输出函数的函数名
+	%(lineno)d   调用日志输出函数的语句所在的代码行
+	%(created)f   当前时间，用UNIX标准的表示时间的浮点数表示
+	%(relativeCreated)d   输出日志信息时的，自Logger创建以来的毫秒数
+	%(asctime)s   字符串形式的当前时间
+	%(thread)d   线程ID。可能没有
+	%(threadName)s   线程名，可能没有
+	%(process)d     进程ID。可能没有
+	%(message)s    用户输出的信息
+
+
+
+
+```python
+import os
+import logging.config   #不能只导入logging
+BASE_DIR=os.path.dirname(os.path.dirname(__file__))
+# DB_PATH=r'%sdbdb.txt' %BASE_DIR
+DB_PATH=r'%sdb' %BASE_DIR
+
+# 定义日志文件的路径
+LOG_PATH=r'%slogaccess.log' %BASE_DIR
+BOSS_LOG_PATH=r'%slogboss.log' %BASE_DIR
+
+# 定义三种日志输出格式 开始
+standard_format = '[%(asctime)s][%(threadName)s:%(thread)d][task_id:%(name)s][%(filename)s:%(lineno)d]' 
+                  '[%(levelname)s][%(message)s]' #其中name为getlogger指定的名字
+simple_format = '[%(levelname)s][%(asctime)s][%(filename)s:%(lineno)d]%(message)s'
+
+id_simple_format = '[%(levelname)s][%(asctime)s] %(message)s'
+# 定义日志输出格式 结束
+logfile_dir = os.path.dirname(os.path.abspath(__file__))  # log文件的目录
+logfile_name = 'all2.log'  # log文件名
+
+# 如果不存在定义的日志目录就创建一个
+if not os.path.isdir(logfile_dir):
+    os.mkdir(logfile_dir)
+
+# log文件的全路径
+logfile_path = os.path.join(logfile_dir, logfile_name)
+
+# log配置字典
+LOGGING_DIC = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {
+            'format': standard_format
+        },
+        'simple': {
+            'format': simple_format
+        },
+        'id_simple': {
+            'format': id_simple_format
+        },
+    },
+    'filters': {},
+    # handlers是日志的接收者，不同的handler会将日志输出到不同的位置
+    'handlers': {
+        #打印到终端的日志
+        'stream': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',  # 打印到屏幕
+            'formatter': 'simple'
+        },
+        #打印到文件的日志,收集info及以上的日志
+        'access': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',  # 轮转保存到文件，若为FileHandler则只是普通保存到未见
+            'formatter': 'standard',
+            #可以定制日志文件路径
+            # BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+            # LOG_PATH = os.path.join(BASE_DIR,'a1.loh')
+            'filename': logfile_path,  # 日志文件
+            'maxBytes': 1024*1024*5,  # 日志大小 5M
+            'backupCount': 5,  #若为轮转，则表示最多保存几份文件，多则删除
+            'encoding': 'utf-8',  # 日志文件的编码，再也不用担心中文log乱码了
+        },
+        #打印到文件的日志,收集error及以上的日志
+        'boss': {
+                    'level': 'ERROR',
+                    'class': 'logging.handlers.RotatingFileHandler',  # 保存到文件
+                    'formatter': 'id_simple',
+                    'filename': BOSS_LOG_PATH,  # 日志文件
+                    # 'maxBytes': 1024*1024*5,  # 日志大小 5M
+                    'maxBytes': 300,  # 日志大小 5M
+                    'backupCount': 5,
+                    'encoding': 'utf-8',  # 日志文件的编码，再也不用担心中文log乱码了
+                },
+    },
+    # loggers是日志的产生者，产生的日志会传递给handler然后控制输出
+    'loggers': {
+        #logging.getLogger(__name__)拿到的logger配置
+        'aaa': {
+            'handlers': ['stream', 'access','boss'],  # 这里把上面定义的两个handler都加上，即log数据既写入文件又打印到屏幕
+            'level': 'DEBUG',
+            'propagate': False,  #默认为True， 向上（更高level的logger）传递
+        },
+        'bbb': {
+            'handlers': ['stream', 'access','boss'],  # 这里把上面定义的两个handler都加上，即log数据既写入文件又打印到屏幕
+            'level': 'DEBUG',
+            'propagate': False,  #默认为True， 向上（更高level的logger）传递
+        },
+        # 若为空,logger若找不到其他logger的话可以取任意名
+        '': {
+            'handlers': ['stream', 'access','boss'],  # 这里把上面定义的两个handler都加上，即log数据既写入文件又打印到屏幕
+            'level': 'DEBUG',
+            'propagate': False,  #默认为True， 向上（更高level的logger）传递
+        },
+        #这样我们再取logger对象时logging.getLogger(__name__)，不同的文件__name__不同，这保证了打印日志时标识信息不同，
+        # 但是拿着该名字去loggers里找key名时却发现找不到，于是默认使用key=''的配置
+    },
+}
+
+def load_my_logging_cfg():
+    logging.config.dictConfig(LOGGING_DIC)  # 导入上面定义的logging配置
+    logger = logging.getLogger(__name__)  # 生成一个log实例
+    logger.info('It works!')  # 记录该文件的运行状态
+
+if __name__ == '__main__':
+    load_my_logging_cfg()
+```
+
+```python
+# 在别的文件拿到日志的产生者即loggers如aaa，bbb
+import 模块
+from logging import config,getLogger #(不能import logging  ,logging.config,因为config是logging的一个子文件夹)
+# 也可以import logging.config
+config.dictConfig(模块.LOGGING_DIC)
+logger1=getLogger('aaa')
+# 产生日志
+logger1.info('这是一条info日志')
+```
+
+
+### 日志名的命名
+	就是那个配置文件里的loggers
+	根据使用需求去命名，如用户交易，终端提示，测试
+	若loggers中有个为空,则可以起不存在的loggers外任意名。
+
+
+### 日志轮转
+```python
+	'class': 'logging.handlers.RotatingFileHandler',  # 轮转保存到文件，若为FileHandler则只是普通保存到未见
+    'formatter': 'standard',
+	'maxBytes': 1024*1024*5,  # 日志大小 5M
+    'backupCount': 5,  #若为轮转，则表示最多保存几份文件，多则删除
+```
