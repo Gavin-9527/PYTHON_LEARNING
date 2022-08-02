@@ -652,7 +652,7 @@ with open('test.json',mode='wt',encoding='utf-8') as f:
 	f.write(res)
 # 将序列化结果写入文件的简单写法
 with open('test.json',mode='wt',encoding='utf-8') as f:
-	json.dump(需要序列化的数据,f)
+	json.dump(需要序列化的数据,f, ensure_ascii=False) # 中文格式
 with open('test.json',mode='rt',encoding='utf-8') as f2:
 	json_res=f.read()
 	l=json.loads(json_res)
@@ -791,7 +791,8 @@ simple_format = '[%(levelname)s][%(asctime)s][%(filename)s:%(lineno)d]%(message)
 
 id_simple_format = '[%(levelname)s][%(asctime)s] %(message)s'
 # 定义日志输出格式 结束
-logfile_dir = os.path.dirname(os.path.abspath(__file__))  # log文件的目录
+BASE_DIR=os.path.dirname(os.path.dirname(__file__))
+logfile_dir = os.path.join(BASE_DIR, 'log')  # log文件的目录
 logfile_name = 'all2.log'  # log文件名
 
 # 如果不存在定义的日志目录就创建一个
