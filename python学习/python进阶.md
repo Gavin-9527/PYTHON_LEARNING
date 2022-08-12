@@ -170,7 +170,8 @@ def f1():
 	global 变量名（不可变类型）：即局部变量变成全局变量
 	可变类型操作就是全局作用。
 
-	nonlocal 变量名（不可变类型）：修改函数外层函数包含的名字对于的值
+	nonlocal 变量名（不可变类型）：修改外部嵌套函数内的变量包含的名字对于的值
+	nonlocal声名此变量与外层同名变量为相同的变量。
 
 
 ### 闭包函数（即名称空间与作用域+函数嵌套+函数对象）
@@ -230,7 +231,7 @@ import time
 def timmer(func):
 
     # func
-	@wraps(func)
+	@wraps(func) # 防止重写了我们函数的名字和注释文档
     def warpper(*args,**kwargs):
 
         start=time.time()
@@ -635,7 +636,7 @@ while recv_size < total_size:
 
 
 
-### json&pickle
+### json&pickle (注，json不识别python对象，即类的实例化)
 	序列化
 		内存中的数据类型-->序列化-->特定的格式（json或pickle）
 	反序列化
