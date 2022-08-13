@@ -228,7 +228,7 @@ del obj1.name
 
 
 
-### 继承
+## 继承
 	继承是一种创建新类的方式，新建的类可称为子类或派生类，父类又可称为基类或超类,子类会遗传弗雷的属性
 	需要注意的是：python支持多继承
 
@@ -307,3 +307,37 @@ obj.test()
 	满足人的思维习惯
 
 	在类名后加上Mixin，able，ible，表示这个类不是子类的真正父类，只是为了加功能进去而创造的类
+
+
+## 多态
+	同一种事物有多种形态
+	多态性指的是可以在不考虑对象具体类型的情况下而直接使用对象
+```PYTHON
+import abc
+
+  
+
+class Amimal(metaclass=abc.ABCMeta):   # 抽象基类，统一所有子类的标准
+
+    @abc.abstractclassmethod
+
+    def say(self):
+
+        pass
+
+# obj = Amimal() 不能实例化抽象化基类 
+
+class People(Amimal):
+
+    def say(self):
+
+        pass
+
+  
+
+obj = People() # 若People类没定义say方法会报错
+```
+
+	推崇鸭子类型：
+			即不使用多态的继承实现多态，比如统一常用的函数名等
+		
