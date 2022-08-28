@@ -319,7 +319,7 @@ import abc
 
 class Amimal(metaclass=abc.ABCMeta):   # 抽象基类，统一所有子类的标准
 
-    @abc.abstractclassmethod
+    @abc.abstractclassmethod  # 指示抽象方法的装饰器
 
     def say(self):
 
@@ -340,4 +340,82 @@ obj = People() # 若People类没定义say方法会报错
 
 	推崇鸭子类型：
 			即不使用多态的继承实现多态，比如统一常用的函数名等
-		
+```python
+class People:
+	def say(self):
+		pass
+
+class Dog:
+	def say(self):
+		pass
+
+class Pig:
+	def say(self):
+		pass
+```
+
+
+## 绑定方法：特殊之处在于调用者本身当做第一个参数自动传入
+	绑定给对象的方法：调用者是对象，自动传入的是对象
+	绑定给类的方法：调用者是类，自动传入的是类
+```python
+@classmethod # 将下面的函数装饰成绑定给类的方法
+def aaa(cls):
+	return cls(传cls类的参)
+```
+
+
+## 非绑定方法 (静态方法)
+```python
+@staticmethod # 将下述函数装饰成一个静态方法
+def add(a,b):
+	return a+b
+```
+
+
+
+# 反射
+	指的是在程序运行过程中可以“动态”获取对象的信息
+```python
+class People:
+	def __init__(self, name, age):
+		self.name = name
+		self.age = age
+
+	def say(self):
+		print('<%s:%s>' %(self.name, self.age))
+
+obj = People('辣白菜', 18)
+
+
+# 实现反射机制的步骤
+# 1 先通过dir，查看某一个对象下可以.出哪些属性来
+print(dir(obj))
+
+# 2 可以通过字符串反射到真正的属性上，得到属性值
+print(obj.__dict__[dir(obj)[-2]])  # 辣白菜
+
+
+# 四个内置函数的使用:通过字符串来操作属性值
+print(hasattr(obj, 'name'))  # True
+	
+print(getattr(obj, 'name')) # 辣白菜
+
+setattr(obj, 'name', 'gavin')  
+print(obj.name) # gavin
+
+delattr(obj, 'name')
+
+getattr(obj,'say')()# 也可通过字符串操作方法
+```
+
+
+# 内置方法
+	定义在类内部，以__开头__结尾的方法
+	会在某种情况下自动触发执行  
+```python
+# __str__ # 打印对象什么都不加的时候就会触发
+	# 用来打印对象信息
+# __del__ # 在删除对象时触发，会先执行该方法
+	# 发起系统调用，告诉操作系统回收相关的系统资源
+```
