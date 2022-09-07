@@ -419,3 +419,120 @@ getattr(obj,'say')()# 也可通过字符串操作方法
 # __del__ # 在删除对象时触发，会先执行该方法
 	# 发起系统调用，告诉操作系统回收相关的系统资源
 ```
+
+
+# 元类
+	就是用来实例化产生类的类
+	元类----实例化----》类----实例化----》对象
+
+	内置的元类是type
+	class关键字定义的所有的类以及内置的类都是由type实例化产生的
+
+
+	class关键字创造People类的步骤
+```python
+# 1、类名
+class_name = 'People'
+# 2、类的基类
+class_bases = (object, )
+#  3、执行类体代码拿到类的名称空间
+class_dic = {}
+class_body = """
+	def __init__(self, name, age):
+		self.name = name
+		self.age = age
+
+	def say(self):
+		print('<%s:%s>' %(self.name, self.age))"""
+exec(class_body, {}, class_dic)  # 类体代码，全局名称空间，类体名称空间
+
+# 4、调用元类 
+People = type(class_name, class_bases, class_dic)
+```
+
+
+```python
+class People(metaclass=type):
+	pass
+
+```
+
+
+## 自定义元类
+```python
+class Mymeta(type): # 只有继承了type类的类才是元类
+	#           空对象,class_name, class_bases, class_dic
+	def __init__(self,class_name, class_bases, class_dic):
+		if not class_name.istitle():
+			raise NameError('类名首字母必须大写')
+	#         当前所在类，调用类时所传入的参数
+	def __new__(cls, *args, **kwargs):
+		# 造Mymeta的对象
+		return super().__new__(cls, *args, **kwargs)
+		# return type.__new__(cls, *args, **kwargs) # 两种方式均可
+
+	def __call__(self, *args, **kwargs):
+		people_obj = self.__new__(self)
+
+		self.__init__(people_obj, *args, **kwargs)
+
+		return people_obj
+
+
+
+```
+
+	调用Mymeta发生三件事,调用Mymeta就是type.__call__
+	先造一个空对象=》People，调用类内的__new__方法
+	调用Mymeta这个类内的__init__方法，完成初始化对象的操作
+	返回初始化好的对象
+
+	   __call__
+```python
+class People(metaclass=Mymeta):
+	
+	def __init__(self, name, age):
+		self.name = name
+		self.age = age
+
+	def say(self):
+		print('%s:%s' %(self.name, self.zge))
+		
+	def __new__(cls, *args, **kwargs):
+		# 产生真正对象
+		return object.__new__(cls)
+
+	# 如果想让一个对象可以加括号调用，需要在该对象的类中添加一个方法__call__
+```
+
+
+# 异常
+### 语法错误SyntaxError
+	方式一、必须在程序运行前就改正	
+
+
+### 逻辑错误
+	错误发生的条件是可以预知的
+		逻辑判断
+
+	错误发生的条件是无法预知的
+```python
+try:
+	子代码块 # 有可能抛出异常的代码,抛出异常后，该行代码同级别的后续子代码不会再运行
+except 异常类型1 as e:
+	pass
+except 异常类型2 as e:
+	pass
+# 若处理异常方式相同，则
+except (异常类型1, 异常类型2) as e:
+	pass
+except Exception as e: # 万能异常
+	pass
+...
+else:
+	如果被检测的子代码块没有异常发生，则会执行else的子代码(不能单独与try使用,必须搭配except)
+finally:
+	无论被检测的子代码块有无异常发生，都会执行finally的子代码(不会处理异常，可以单独与try使用)
+```
+
+
